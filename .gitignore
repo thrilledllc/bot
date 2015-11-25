@@ -1,0 +1,7 @@
+node_modules
+.rvmrc
+**.DS_Store
+pm-debug.log
+newrelic_agent.log
+.env
+*.log
