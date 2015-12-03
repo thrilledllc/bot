@@ -2,8 +2,7 @@
   'use strict';
   var fetch = require('fetch'),
     querystring = require('querystring'),
-    CUSTOM_SEARCH_API_URL = 'https://www.googleapis.com/customsearch/v1',
-    API_URL = 'http://ajax.googleapis.com/ajax/services/search/images',
+    API_URL = 'https://www.googleapis.com/customsearch/v1',
     rateLimits = {// time in between usage
     },
     defaultRateLimit = 0,
@@ -36,8 +35,7 @@
     var match;
     
     function imageMe(query, animated) {
-      var q, rateLimited, url;
-      
+      var q, rateLimited, url = API_URL;
       
       rateLimited = rateLimit(from);
       if (rateLimited) {
@@ -45,32 +43,19 @@
         return;
       }
 
-
-      if (animated) {
-        url = CUSTOM_SEARCH_API_URL;
-        q = {
-          q: query,
-          searchType:'image',
-          safe:'medium',
-          fields:'items(link)',
-          cx: config.google.cseId,
-          key: config.google.apiKey,
-          fileType: 'gif',
-          hq: 'animated'
-        }
-      } else {
-        url = API_URL;
-        q = {
-          v: '1.0',
-          rsz: '8',
-          q: query,
-          safe: 'active'
-        };
-        //this no longer works, maybe again in the future
-        // if (animated) {
-        //   q.imgtype = 'animated';
-        // } 
+      q = {
+        q: query,
+        searchType:'image',
+        safe:'medium',
+        fields:'items(link)',
+        cx: config.google.cseId,
+        key: config.google.apiKey
       }
+      
+      if (animated) {
+        q.fileType = 'gif';
+        q.hq = 'animated'
+      } 
       
       fetch.fetchUrl(url + '?' + querystring.stringify(q), function (err, meta, body) {
         var image, images;
@@ -88,11 +73,8 @@
         } else {
           bot.say(channel, "I couldn't find anything for " + query);
         }
-        
       });
     }
-    
-
     
     match = message.match(/^(image|img)( me)? (.*)/i);
     if (match) {
