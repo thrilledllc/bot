@@ -10,7 +10,7 @@
     "datejs": "*",
     "dotenv": "^1.0.0",
     "fetch": "*",
-    "slack-client": "1.4.1"
+    "slack-client": "2.0.0"
   },
   "scripts": {
     "start": "node worker.js"

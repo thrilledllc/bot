@@ -1,15 +1,11 @@
 exports.Wrapper = Wrapper;
 
-function Wrapper(nick, slack) {
+function Wrapper(nick, slackRTMClient) {
     var self = this;
     self.nick = nick;
-    self.slack = slack;
+    self.slackRTMClient = slackRTMClient;
 }
 
-Wrapper.prototype.say = function(channel, text) { 
-    console.log(text);
-    var channel = this.slack.getChannelGroupOrDMByID(channel);
-    if (channel) {
-        channel.send(text);
-    }
+Wrapper.prototype.say = function(channel, text) {
+    this.slackRTMClient.sendMessage(text, channel);
 }

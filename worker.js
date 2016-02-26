@@ -2,7 +2,10 @@
 var fs = require('fs'),
   path = require('path'),
   Bot = require('./bot'),
-  Slack = require('slack-client'),
+  SlackRtmClient = require('slack-client').RtmClient,
+  SlackDataStore = require('slack-client').MemoryDataStore,
+  RTM_EVENTS = require('slack-client').RTM_EVENTS,
+  RTM_CLIENT_EVENTS = require('slack-client').CLIENT_EVENTS.RTM,
   scriptsDir = __dirname + "/scripts/",
   scripts = [],
   scriptsLoaded = [],
@@ -19,48 +22,20 @@ fs.readdirSync(scriptsDir).filter(function (file) {
   });
 
 var autoReconnect = true,
-    autoMark = true,
-    slackClient = new Slack(config['slack']['token'], autoReconnect, autoMark),
-    slackWrapper = new Bot.Wrapper(config['bot']['name'], slackClient),
-    to = '';
+  autoMark = true,
+  slackRTMClient = new SlackRtmClient(config['slack']['token'], {logLevel: 'error'}),
+  slackDataStore = new SlackDataStore(config['slack']['token'], {logLevel: 'error'}),
+  slackWrapper = new Bot.Wrapper(config['bot']['name'], slackRTMClient),
+  to = '';
 
-  slackClient.on('open', function() {
-      var channels = [],
-          groups = [],
-          unreads = slackClient.getUnreadCount(),
-          key;
+slackRTMClient.start();
 
-      for (key in slackClient.channels) {
-        if (slackClient.channels[key].is_member) {
-          channels.push('#' + slackClient.channels[key].name);
-        }
-      }
-
-      for (key in slackClient.groups) {
-        if (slackClient.groups[key].is_open && !slackClient.groups[key].is_archived) {
-          groups.push(slackClient.groups[key].name);
-        }
-      }
-
-      console.log('Welcome to Slack. You are @%s of %s', slackClient.self.name, slackClient.team.name);
-      console.log('You are in: %s', channels.join(', '));
-      console.log('As well as: %s', groups.join(', '));
-      console.log('You have %s unread ' + (unreads === 1 ? 'message' : 'messages'), unreads);
+slackRTMClient.on(RTM_EVENTS.MESSAGE, function (message) {
+  if (message.type === 'message' && message.text) {
+    var user = slackDataStore.getUserById(message.user);
+    var userName = user ? user.name : 'unknown';
+    scripts.forEach(function (script) {
+      script(config, slackWrapper, message.channel, to, userName, message.text);
     });
-
-  slackClient.on('message', function(message) {
-    if (message.type === 'message' && message.text) {
-      console.log('channel: ' +  message.channel + ' got message ' + message.text);
-      var user = slackClient.getUserByID(message.user);
-      var userName = user ? user.name : 'unknown';
-      scripts.forEach(function (script) {
-        script(config, slackWrapper, message.channel, to, userName, message.text);
-      });
-    }
-  });
-  
-  slackClient.on('error', function(error) {
-    console.error('Error: %s', error);
-  });
-  
-  slackClient.login();
+  }
+});
