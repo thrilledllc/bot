@@ -5,7 +5,7 @@
 
   module.exports = function(config, bot, channel, to, from, message) {
     function reportWeather(latitude, longitude, locationString) {
-      var url = 'https://api.forecast.io/forecast/' +  config.forecast.apiKey + '/' + latitude + ',' + longitude;
+      var url = 'https://api.darksky.net/forecast/' +  config.forecast.apiKey + '/' + latitude + ',' + longitude;
       var options = null;
       fetch.fetchUrl(url, options, function(error, meta, body){
         if(error) {
@@ -19,7 +19,7 @@
           } else {
             str+= '*Weather*\n';
           }
-          str+= 'http://forecast.io/#/f/' + latitude + ',' + longitude+ '\n'
+          str+= 'https://darksky.net/forecast/' + latitude + ',' + longitude+ '\n'
           if (weather.currently) {
             str+='*Right Now:* ' + Math.round(weather.currently.temperature) + ' degrees | ' + weather.currently.summary + '\n';
           }
