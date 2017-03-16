@@ -2,10 +2,10 @@
 var fs = require('fs'),
   path = require('path'),
   Bot = require('./bot'),
-  SlackRtmClient = require('slack-client').RtmClient,
-  SlackDataStore = require('slack-client').MemoryDataStore,
-  RTM_EVENTS = require('slack-client').RTM_EVENTS,
-  RTM_CLIENT_EVENTS = require('slack-client').CLIENT_EVENTS.RTM,
+  SlackRtmClient = require('@slack/client').RtmClient,
+  SlackDataStore = require('@slack/client').MemoryDataStore,
+  RTM_EVENTS = require('@slack/client').RTM_EVENTS,
+  RTM_CLIENT_EVENTS = require('@slack/client').CLIENT_EVENTS.RTM,
   scriptsDir = __dirname + "/scripts/",
   scripts = [],
   scriptsLoaded = [],
@@ -23,8 +23,8 @@ fs.readdirSync(scriptsDir).filter(function (file) {
 
 var autoReconnect = true,
   autoMark = true,
-  slackRTMClient = new SlackRtmClient(config['slack']['token'], {logLevel: 'error'}),
   slackDataStore = new SlackDataStore(config['slack']['token'], {logLevel: 'error'}),
+  slackRTMClient = new SlackRtmClient(config['slack']['token'], {logLevel: 'error',  dataStore: slackDataStore}),
   slackWrapper = new Bot.Wrapper(config['bot']['name'], slackRTMClient),
   to = '';
 
