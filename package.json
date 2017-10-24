@@ -10,7 +10,8 @@
     "datejs": "*",
     "dotenv": "^1.0.0",
     "fetch": "*",
-    "@slack/client": "^3.9.0"
+    "@slack/client": "^3.9.0",
+    "wikidata-sdk": "*"
   },
   "scripts": {
     "start": "node worker.js"
