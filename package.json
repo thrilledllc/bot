@@ -7,11 +7,11 @@
   "version": "0.0.1",
   "description": "bot",
   "dependencies": {
-    "@slack/client": "^3.14.1",
+    "@slack/client": "^3.15.0",
     "datejs": "0.0.2",
     "dotenv": "^4.0.0",
     "fetch": "^1.1.0",
-    "wikidata-sdk": "^5.2.9"
+    "wikidata-sdk": "^5.7.5"
   },
   "scripts": {
     "start": "node worker.js"

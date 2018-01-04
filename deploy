@@ -2,11 +2,4 @@
 
 export $(cat .env | xargs)
 
-aws ecr get-login --no-include-email --region us-east-1
-
-export BOT_REPO_URL=$BOT_REPO/$BOT_SERVICE:latest
-
-docker build -t "$BOT_SERVICE" .
-docker tag "$BOT_SERVICE:latest" "$BOT_REPO_URL"
-docker push "$BOT_REPO_URL"
-./ecs-deploy -c "$BOT_CLUSTER" -n "$BOT_SERVICE" -i "$BOT_REPO_URL"
+ecs-cli compose service up
