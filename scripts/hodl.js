@@ -2,18 +2,19 @@
   'use strict'
 	const fetch = require('fetch')
   const wdk = require('wikidata-sdk')
-  
+  let db = {};
+
   module.exports = function (config, bot, channel, to, from, message) {
     const match = message.match(/(?:hodl)\s*([A-Z]*)/i)
-    
+
     if (!match || match.length < 2) {
       return
     }
 		const symbol = match[1]
-		
+
     const url = "https://poloniex.com/public?command=returnTicker"
     const symbols = symbol.length > 0 ? [symbol] : ["BTC", "ETH", "LTC", "XRP", "STR"]
-    
+
     fetch.fetchUrl(url, function (error, meta, body) {
        try {
          const jsonString = body.toString()
@@ -39,13 +40,30 @@
          }
          var output = "```\n"
          for (var j = 0; j < prices.length; j++) {
-           const symbol = symbols[j].toUpperCase()
-           const price = prices[j]
-           var spaces = "   "
-           for (var i = 0; i < maxPriceLen - price.length; i++) {
-             spaces = spaces + " "
-           }
-           output = output + symbol.replace("STR", "XLM") + spaces + "$" + price + "\n"
+            const symbol = symbols[j].toUpperCase()
+            const price = prices[j]
+            let extra = ''
+            if (db[symbol]) {
+              extra = price - db[symbol].price
+              if (extra > 0) {
+                extra = ':arrow_up: ' + extra
+              } else if (extra === 0) {
+                extra = ':spinner:'
+              } else {
+                extra = ':arrow_down: ' + extra
+              }
+              extra = ' (' + extra + ')'
+            }
+            db[symbol] = {
+              price: price,
+              date: new Date()
+            }
+
+            var spaces = "   "
+            for (var i = 0; i < maxPriceLen - price.length; i++) {
+              spaces = spaces + " "
+            }
+            output = output + symbol.replace("STR", "XLM") + spaces + "$" + price + extra + "\n"
          }
          output = output + "```"
          bot.say(channel, output)
@@ -54,6 +72,6 @@
       }
     })
   }
-  
+
 }(this, typeof module === 'undefined' ? {} : module))
-   
+
