@@ -62,11 +62,11 @@
 
               extra = Math.floor(extra * 100) / 100
               if (extra > 0) {
-                extra = '🔼 ' + Math.abs(extra) + ' (+' + perc + ')'
+                extra = '   🔼 ' + Math.abs(extra) + ' (+' + perc + ')'
               } else if (extra === 0) {
                 extra = ''
               } else {
-                extra = '🔽 ' + Math.abs(extra) + ' (-' + perc + ')'
+                extra = '   🔽 ' + Math.abs(extra) + ' (-' + perc + ')'
               }
 
             }
