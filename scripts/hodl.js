@@ -64,10 +64,11 @@
               if (extra > 0) {
                 extra = '🔼 ' + Math.abs(extra) + ' (+' + perc + ')'
               } else if (extra === 0) {
-                extra = false
+                extra = ''
               } else {
                 extra = '🔽 ' + Math.abs(extra) + ' (-' + perc + ')'
               }
+
             }
             db[symbol] = {
               price: price,
