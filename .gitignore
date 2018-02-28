@@ -5,3 +5,4 @@ pm-debug.log
 newrelic_agent.log
 .env
 *.log
+tmp

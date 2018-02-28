@@ -1,8 +1,0 @@
-version: "2"
-services:
-
- bot:
-  build: .
-  image: 940344036235.dkr.ecr.us-east-1.amazonaws.com/bot:4e2f5a7d4585985da3e947b7572b9f34e84dc011
-  env_file:
-   - ../.env
