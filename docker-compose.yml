@@ -3,6 +3,6 @@ services:
   
   bot:
     build: .
-    image: "${BOT_REPO_URL}"
+    image: "${TRD_DOCKER_REPO_URL}"
     env_file:
       - .env

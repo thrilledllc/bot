@@ -2,4 +2,16 @@
 
 export $(cat .env | xargs)
 
-ecs-cli compose service up
+TRD_DOCKER_REPO_TAG=`git rev-parse HEAD | tr -d '[:space:]'`
+TRD_DOCKER_REPO_NAME_AND_TAG="$TRD_DOCKER_REPO_NAME:$TRD_DOCKER_REPO_TAG"
+TRD_DOCKER_REPO_URL="$TRD_DOCKER_REPO_HOST/$TRD_DOCKER_REPO_NAME_AND_TAG"
+
+mkdir tmp &> /dev/null
+TRD_COMPOSE_FILE_PATH="tmp/docker-compose-$TRD_ECS_SERVICE_NAME.yml"
+
+TRD_COMPOSE_FILE="version: \"2\"\nservices:\n\n bot:\n  build: .\n  image: "${TRD_DOCKER_REPO_URL}"\n  env_file:\n   - ../.env"
+echo -e "$TRD_COMPOSE_FILE" > $TRD_COMPOSE_FILE_PATH
+docker build -t $TRD_DOCKER_REPO_NAME_AND_TAG .
+docker tag $TRD_DOCKER_REPO_NAME_AND_TAG $TRD_DOCKER_REPO_URL
+ecs-cli push --region  $TRD_REGION $TRD_DOCKER_REPO_URL
+ecs-cli compose --region $TRD_REGION --cluster $TRD_ECS_CLUSTER --file $TRD_COMPOSE_FILE_PATH --project-name $TRD_ECS_SERVICE_NAME service up --container-name $TRD_ECS_SERVICE_NAME  --role ecsServiceRole
