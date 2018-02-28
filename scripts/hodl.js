@@ -4,6 +4,17 @@
   const wdk = require('wikidata-sdk')
   let db = {};
 
+  function percDelta(a, b) {
+    var p = a / b
+    var sign = a >= b ? '+' : '-'
+    if (p === Infinity) {
+      return 'infinity'
+    }    
+    p = 100.0 * Math.abs(p - 1.0)
+    p = Math.round(p * 10) / 10.0
+    return p + '%'
+  }
+
   module.exports = function (config, bot, channel, to, from, message) {
     const match = message.match(/(?:hodl)\s*([A-Z]*)/i)
 
@@ -45,14 +56,18 @@
             let extra = ''
             if (db[symbol]) {
               extra = price - db[symbol].price
+
+              let sign = extra >= 0 ? '+' : '-'
+              let perc = percDelta(price, db[symbol].price)
+
+              extra = Math.floor(extra * 100) / 100
               if (extra > 0) {
-                extra = ':arrow_up: ' + extra
+                extra = '🔼 ' + Math.abs(extra) + ' (+' + perc + ')'
               } else if (extra === 0) {
-                extra = ':spinner:'
+                extra = false
               } else {
-                extra = ':arrow_down: ' + extra
+                extra = '🔽 ' + Math.abs(extra) + ' (-' + perc + ')'
               }
-              extra = ' (' + extra + ')'
             }
             db[symbol] = {
               price: price,
