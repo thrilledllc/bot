@@ -45,7 +45,7 @@
              prices.push(" ???")
              continue
            }
-           const price = parseFloat(priceString).toFixed(2)
+           const price = parseFloat(priceString).toFixed(4)
            prices.push(price)
            maxPriceLen = Math.max(price.length, maxPriceLen)
          }
