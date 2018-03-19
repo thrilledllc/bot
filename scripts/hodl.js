@@ -1,6 +1,6 @@
 (function (root, module) {
   'use strict'
-	const fetch = require('fetch')
+	const rp = require('request-promise-native')
   const wdk = require('wikidata-sdk')
   let db = {};
 
@@ -23,70 +23,83 @@
     }
 		const symbol = match[1]
 
-    const url = "https://poloniex.com/public?command=returnTicker"
-    const symbols = symbol.length > 0 ? [symbol] : ["BTC", "ETH", "LTC", "XRP", "STR"]
+    
+    const symbols = symbol.length > 0 ? [symbol] : ["BTC", "ETH", "LTC", "XRP", "STR", "XMR"]
+    
+    var fetchSymbol = function(symbol) {
+      const url = 'https://poloniex.com/public?command=returnChartData&currencyPair=USDT_' + symbol + '&start=' + (Math.floor(Date.now() / 1000) - 86400).toString() + '&end=9999999999&period=1800'
+      return rp(url)
+    }
+    var requests = symbols.map(fetchSymbol)
+    Promise.all(requests).then(function(results) {
+      var maxPriceLen = 4
+      var maxDeltaLen = 4
+      var maxPercLen = 4
+      var i = 0
+      var prices = []
+      var deltas = []
+      var deltaStrings = []
+      var percs = []
+      results.forEach(function(jsonString) {
+        const array = JSON.parse(jsonString)
+        if (array.length > 0) {
+          const symbol = symbols[i]
+          const yesterday = array[0].open
+          const now = array[array.length - 1].close
+          const delta = now - yesterday
+          const deltaString = delta.toFixed(4).toString()
+          deltaStrings.push(deltaString)
+          const perc = percDelta(now, yesterday)
+          percs.push(perc)
+          const price = now.toFixed(4).toString()
+          prices.push(price)
+          deltas.push(delta)
+          maxPriceLen = Math.max(price.length, maxPriceLen)
+          maxDeltaLen = Math.max(deltaString.length, maxDeltaLen)
+          maxPercLen = Math.max(perc.length, maxPercLen)
+        }
+        i++;
+      });
+      
+      var output = "```\n" 
+      for (var j = 0; j < prices.length; j++) {
+        const symbol = symbols[j]
+        const price = prices[j]
+        var delta = deltas[j]
+        const deltaString = deltaStrings[j]
+        const perc = percs[j]
+        
+        var deltaSpaces = "  "
+        for (var i = 0; i < maxDeltaLen - deltaString.length; i++) {
+          deltaSpaces = deltaSpaces + " "
+        }
+        
+        var percSpaces = "  "
+        for (var l = 0; l < maxPercLen - perc.length; l++) {
+          percSpaces = percSpaces + " "
+        }
 
-    fetch.fetchUrl(url, function (error, meta, body) {
-       try {
-         const jsonString = body.toString()
-         const dictionary = JSON.parse(jsonString)
-         var prices = []
-         var maxPriceLen = 4
-         for (var i = 0; i < symbols.length; i++) {
-           const symbol = symbols[i].toUpperCase()
-           const key = "USDT_" + symbol
-           const result = dictionary[key]
-           if (!result) {
-             prices.push(" ???")
-             continue
-           }
-           const priceString = result["last"]
-           if (!priceString) {
-             prices.push(" ???")
-             continue
-           }
-           const price = parseFloat(priceString).toFixed(4)
-           prices.push(price)
-           maxPriceLen = Math.max(price.length, maxPriceLen)
-         }
-         var output = "```\n"
-         for (var j = 0; j < prices.length; j++) {
-            const symbol = symbols[j].toUpperCase()
-            const price = prices[j]
-            let extra = ''
-            if (db[symbol]) {
-              extra = price - db[symbol].price
-
-              let sign = extra >= 0 ? '+' : '-'
-              let perc = percDelta(price, db[symbol].price)
-
-              extra = Math.floor(extra * 100) / 100
-              if (extra > 0) {
-                extra = '   🔼 $' + Math.abs(extra) + ' (+' + perc + ')'
-              } else if (extra === 0) {
-                extra = ''
-              } else {
-                extra = '   🔽 $' + Math.abs(extra) + ' (-' + perc + ')'
-              }
-
-            }
-            db[symbol] = {
-              price: price,
-              date: new Date()
-            }
-
-            var spaces = "   "
-            for (var i = 0; i < maxPriceLen - price.length; i++) {
-              spaces = spaces + " "
-            }
-            output = output + symbol.replace("STR", "XLM") + spaces + "$" + price + extra + "\n"
-         }
-         output = output + "```"
-         bot.say(channel, output)
-      } catch (e) {
-        bot.say(channel, "failed " + e)
+        if (delta > 0) {
+          delta = '   🔼' + deltaSpaces + '$' + deltaString + percSpaces + ' (+' + perc + ')'
+        } else if (delta === 0) {
+          delta = ''
+        } else {
+          delta = '   🔽' + deltaSpaces + '$' + deltaString + percSpaces + ' (-' + perc + ')'
+        }
+        
+        var spaces = "   "
+        for (var k = 0; k < maxPriceLen - price.length; k++) {
+          spaces = spaces + " "
+        }
+        
+        output = output + symbol.replace("STR", "XLM") + spaces + "$" + price + delta + "\n"
       }
-    })
+      output = output + "```"
+      bot.say(channel, output)
+    }).catch(function(err) {
+      // Will catch failure of first failed promise
+      bot.say(channel, 'sorry kiddo: ' + err)
+    });
   }
 
 }(this, typeof module === 'undefined' ? {} : module))
